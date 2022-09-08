@@ -4,9 +4,11 @@ import com.bridgelabz.lmstechstack.dto.TechStackDTO;
 import com.bridgelabz.lmstechstack.exception.TechStackNotFoundException;
 import com.bridgelabz.lmstechstack.model.TechStackModel;
 import com.bridgelabz.lmstechstack.repository.TechStackRepository;
+import com.bridgelabz.lmstechstack.util.ResponseClass;
 import com.bridgelabz.lmstechstack.util.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,19 +26,30 @@ public class TechStackService implements ITechStackService{
     @Autowired
     TokenUtil tokenUtil;
 
+    @Autowired
+    RestTemplate restTemplate;
+
     @Override
-    public TechStackModel addTechStack(TechStackDTO techStackDTO) {
+    public ResponseClass addTechStack(String token, TechStackDTO techStackDTO) {
+        boolean isTech = restTemplate.getForObject("http://localhost:8083/admin/validate" + token, Boolean.class);
+        if (isTech){
         TechStackModel techStackModel = new TechStackModel(techStackDTO);
         techStackModel.setCreationTimeStamp(LocalDateTime.now());
         techStackRepository.save(techStackModel);
-        String body = "Candidate added sucessfully " + techStackModel.getId();
-        String subject = "CandidateS registration completed";
+        String body = "TechStack added sucessfully " + techStackModel.getId();
+        String subject = "Tech registration completed";
         mailService.send(techStackModel.getEmail(),body, subject);
-        return techStackModel;
+        return new ResponseClass("Sucessfull", 200, techStackModel);
+    }else{
+            throw new TechStackNotFoundException(400,"token is wrong");
+    }
     }
 
+
     @Override
-    public TechStackModel updateTechStack(Long id, TechStackDTO techStackDTO, String token) {
+    public ResponseClass updateTechStack(Long id, TechStackDTO techStackDTO, String token) {
+        boolean isTech = restTemplate.getForObject("http://localhost:8083/admin/validate" + token, Boolean.class);
+        if (isTech){
         Long userId = tokenUtil.decodeToken(token);
         Optional<TechStackModel> isTechPresent= techStackRepository.findById(userId);
         if (isTechPresent.isPresent()) {
@@ -51,17 +64,18 @@ public class TechStackService implements ITechStackService{
                 String body = "Tech stack is added successfully with techStackId " + isTechStackAvailable.get().getId();
                 String subject = "Tech stack registration successfully";
                 mailService.send(isTechStackAvailable.get().getEmail(), subject, body);
-                return isTechStackAvailable.get();
+                return new ResponseClass("Sucessfull", 200, isTechStackAvailable.get());
             } else {
                 throw new TechStackNotFoundException(400, "Tech not found");
             }
-        }
+        }}
         throw new TechStackNotFoundException(400, "Token is wrong");
-
     }
 
     @Override
     public List<TechStackModel> getTechStacks(String token) {
+        boolean isTech = restTemplate.getForObject("http://localhost:8083/admin/validate" + token, Boolean.class);
+        if(isTech){
         Long adminId = tokenUtil.decodeToken(token);
         Optional<TechStackModel> isTechPresent = techStackRepository.findById(adminId);
         if (isTechPresent.isPresent()) {
@@ -71,41 +85,43 @@ public class TechStackService implements ITechStackService{
             } else {
                 throw new TechStackNotFoundException(400, "Tech stack is not found");
             }
-        }
+        }}
         throw new TechStackNotFoundException(400, "Token is wrong");
     }
 
     @Override
-    public TechStackModel deleteTechStack(Long id, String token) {
-        Long userId = tokenUtil.decodeToken(token);
-        Optional<TechStackModel> isTechPresent = techStackRepository.findById(userId);
-        if (isTechPresent.isPresent()) {
-            Optional<TechStackModel> isTechStackAvailable= techStackRepository.findById(id);
-            if (isTechStackAvailable.isPresent()) {
-                techStackRepository.delete(isTechStackAvailable.get());
-                return isTechStackAvailable.get();
-            } else {
-                throw new TechStackNotFoundException(400, "Tech stack not found");
-            }
-        }
-        throw new TechStackNotFoundException(400, "Token is wrong");
-    }
-
-    @Override
-    public TechStackModel getTechStack(Long id, String token) {
+    public ResponseClass deleteTechStack(Long id, String token) {
+        boolean isTech = restTemplate.getForObject("http://localhost:8083/admin/validate" + token, Boolean.class);
+        if(isTech){
         Long userId = tokenUtil.decodeToken(token);
         Optional<TechStackModel> isTechPresent = techStackRepository.findById(userId);
         if (isTechPresent.isPresent()) {
             Optional<TechStackModel> isTechStackAvailable = techStackRepository.findById(id);
             if (isTechStackAvailable.isPresent()) {
-                return isTechStackAvailable.get();
+                techStackRepository.delete(isTechStackAvailable.get());
+                return new ResponseClass("sucessfull", 200, isTechStackAvailable.get());
             } else {
                 throw new TechStackNotFoundException(400, "Tech stack not found");
             }
-        }
+        }}
         throw new TechStackNotFoundException(400, "Token is wrong");
-
     }
 
+    @Override
+    public ResponseClass getTechStack(Long id, String token) {
+        boolean isTech = restTemplate.getForObject("http://localhost:8083/admin/validate" + token, Boolean.class);
+        if (isTech){
+        Long userId = tokenUtil.decodeToken(token);
+        Optional<TechStackModel> isTechPresent = techStackRepository.findById(userId);
+        if (isTechPresent.isPresent()) {
+            Optional<TechStackModel> isTechStackAvailable = techStackRepository.findById(id);
+            if (isTechStackAvailable.isPresent()) {
+                return new ResponseClass("Sucessfull", 200, isTechStackAvailable.get());
+            } else {
+                throw new TechStackNotFoundException(400, "Tech stack not found");
+            }
+        }}
+        throw new TechStackNotFoundException(400, "Token is wrong");
+    }
 
 }

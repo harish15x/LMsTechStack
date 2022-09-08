@@ -3,7 +3,10 @@ package com.bridgelabz.lmstechstack.controller;
 import com.bridgelabz.lmstechstack.dto.TechStackDTO;
 import com.bridgelabz.lmstechstack.model.TechStackModel;
 import com.bridgelabz.lmstechstack.service.ITechStackService;
+import com.bridgelabz.lmstechstack.util.ResponseClass;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -17,29 +20,36 @@ public class TechStackController {
     ITechStackService techStackService;
 
     @PostMapping("/addtechstack")
-    public TechStackModel addTechStack(@Valid @RequestBody TechStackDTO techStackDTO){
-        return techStackService.addTechStack(techStackDTO);
+    public ResponseEntity<ResponseClass> addTechStack(String token, @Valid @RequestBody TechStackDTO techStackDTO){
+        ResponseClass responseClass = techStackService.addTechStack(token, techStackDTO);
+        return new ResponseEntity<>(responseClass, HttpStatus.OK);
+//        return new ResponseEntity<>(responseClass, HttpStatus.OK);
     }
 
     @PutMapping("/updatetechstack/{id}")
-    public TechStackModel updateTechStack(@PathVariable Long id, @Valid @RequestBody TechStackDTO techStackDTO, @RequestHeader String token) {
-        return techStackService.updateTechStack(id, techStackDTO, token);
+    public ResponseEntity<ResponseClass> updateTechStack(@PathVariable Long id, @Valid @RequestBody TechStackDTO techStackDTO, @RequestHeader String token) {
+        ResponseClass responseClass = techStackService.updateTechStack(id, techStackDTO, token);
+        return new ResponseEntity<>(responseClass, HttpStatus.OK);
     }
 
     @GetMapping("/gettechstacks")
-    public List<TechStackModel> getTechStacks(@RequestHeader String token) {
-        return techStackService.getTechStacks(token);
+    public ResponseEntity <List<?>> getTechStacks(@RequestHeader String token) {
+        List<TechStackModel> responseclass = techStackService.getTechStacks(token);
+        return new ResponseEntity<>(responseclass, HttpStatus.OK);
+
     }
 
     @DeleteMapping("deletetechstack/{id}")
-    public TechStackModel deleteTechStack(@PathVariable Long id, @RequestHeader String token) {
-        return techStackService.deleteTechStack(id, token);
+    public ResponseEntity<ResponseClass> deleteTechStack(@PathVariable Long id, @RequestHeader String token) {
+        ResponseClass responseClass = techStackService.deleteTechStack(id, token);
+        return new ResponseEntity<>(responseClass, HttpStatus.OK);
     }
 
 
     @GetMapping("gettechstack/{id}")
-    public TechStackModel getTechStack(@PathVariable Long id, @RequestHeader String token) {
-        return techStackService.getTechStack(id, token);
+    public ResponseEntity<ResponseClass> getTechStack(@PathVariable Long id, @RequestHeader String token) {
+        ResponseClass responseClass = techStackService.getTechStack(id, token);
+        return  new ResponseEntity<>(responseClass, HttpStatus.OK);
     }
 
 
